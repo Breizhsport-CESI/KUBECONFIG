@@ -11,7 +11,7 @@ metadata:
   namespace: breizhsport
 spec:
   serviceName: frontend-breizhsport
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: frontend-breizhsport
@@ -70,6 +70,13 @@ spec:
                 name: frontend-breizhsport
                 port:
                   number: 80
+          - path: /graphql
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-backend-gateway-svc
+                port:
+                  number: 4000
   tls:
     - hosts:
         - frontend.breizhsport.civit.ovh

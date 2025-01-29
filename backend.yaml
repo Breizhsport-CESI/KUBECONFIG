@@ -1,0 +1,186 @@
+kind: ConfigMap 
+apiVersion: v1 
+metadata:
+  name: ms-all-configmap 
+data:
+  JWT_SECRET: "djhuzYIT2178981Hdnzj"
+  MSConnect: "ms-products-svc,ms-users-svc"
+  MONGO_URI: "mongodb://mongodb-svc:27017/breizhsport"
+  MONGO_USER: "root"
+  MONGO_PASSWORD: "example"
+  MONGO_INITDB_ROOT_USERNAME: "root"
+  MONGO_INITDB_ROOT_PASSWORD: "example"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-backend-gateway
+  namespace: breizhsport
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ms-backend-gateway
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: ms-backend-gateway
+    spec:
+      containers:
+      - name: ms-backend-gateway
+        image: rg.fr-par.scw.cloud/aidalinfo-prod/ms-backend-gateway:0.0.3
+        imagePullPolicy: "Always"
+        envFrom:
+        - configMapRef:
+            name: ms-all-configmap
+        - configMapRef:
+            name: backend-configmap
+        ports:
+        - containerPort: 4000
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-backend-gateway-svc
+  namespace: breizhsport
+spec:
+  ports:
+    - port: 4000
+      name: "default"
+      protocol: TCP
+  selector:
+    app: ms-backend-gateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-products
+  namespace: breizhsport
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ms-products
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: ms-products
+    spec:
+      containers:
+      - name: ms-products
+        image: rg.fr-par.scw.cloud/aidalinfo-prod/ms-products:1.0.0
+        imagePullPolicy: "Always"
+        envFrom:
+        - configMapRef:
+            name: ms-all-configmap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-products-svc
+  namespace: breizhsport
+spec:
+  ports:
+    - port: 4001
+      name: "default"
+      protocol: TCP
+  selector:
+    app: ms-products
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-users
+  namespace: breizhsport
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ms-users
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: ms-users
+    spec:
+      containers:
+      - name: ms-users
+        image: rg.fr-par.scw.cloud/aidalinfo-prod/ms-users:1.0.0
+        imagePullPolicy: "Always"
+        envFrom:
+        - configMapRef:
+            name: ms-all-configmap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-users-svc
+spec:
+  ports:
+    - port: 4001
+      name: "default"
+      protocol: TCP
+  selector:
+    app: ms-users
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-satelease-mongo-pv-claim
+  namespace: breizhsport
+spec:
+  accessModes: 
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+  namespace: breizhsport
+spec:
+  selector:
+    matchLabels:
+      app: mongo
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: app-satelease-mongo-pv-claim
+      containers:
+      - name: mongo
+        volumeMounts:
+        - name: storage
+          mountPath: "/data/db"
+        image: mongo:7
+        envFrom:
+        - configMapRef:
+            name: ms-all-configmap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-svc
+  namespace: breizhsport
+spec:
+  ports:
+    - port: 27017
+      name: "default"
+      protocol: TCP
+  selector:
+    app: mongo
