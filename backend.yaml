@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: ms-backend-gateway
-        image: rg.fr-par.scw.cloud/aidalinfo-prod/ms-backend-gateway:0.0.3
+        image: rg.fr-par.scw.cloud/namespace-breizhsport/breinzsport-api-gateway:latest
         imagePullPolicy: "Always"
         envFrom:
         - configMapRef:
@@ -74,7 +74,7 @@ spec:
     spec:
       containers:
       - name: ms-products
-        image: rg.fr-par.scw.cloud/aidalinfo-prod/ms-products:1.0.0
+        image: rg.fr-par.scw.cloud/namespace-breizhsport/breinzsport-api-products:latest
         imagePullPolicy: "Always"
         envFrom:
         - configMapRef:
@@ -112,7 +112,7 @@ spec:
     spec:
       containers:
       - name: ms-users
-        image: rg.fr-par.scw.cloud/aidalinfo-prod/ms-users:1.0.0
+        image: rg.fr-par.scw.cloud/namespace-breizhsport/breinzsport-api-users:latest
         imagePullPolicy: "Always"
         envFrom:
         - configMapRef:
